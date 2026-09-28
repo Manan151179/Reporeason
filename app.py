@@ -7,6 +7,24 @@ import ollama
 # Import os to build file paths that work on any operating system
 import os
 
+# Import re for cleaning model output
+import re
+
+# Import our retrieval functions from retrieval.py
+from retrieval import extract_functions, rank_functions
+
+# --- Configuration ---
+
+# The model we use for localization
+MODEL_NAME = "qwen2.5-coder:7b"
+
+# If the top BM25 retrieval score is below this threshold, the evidence
+# is too weak to trust — we flag it as a possible hallucination.
+# This value was chosen experimentally; typical relevant hits score 5–15+.
+SCORE_THRESHOLD = 2.0
+
+# --- Page setup ---
+
 # Set the page title shown in the browser tab
 st.set_page_config(page_title="RepoReason")
 
@@ -14,7 +32,13 @@ st.set_page_config(page_title="RepoReason")
 st.title("RepoReason")
 
 # Show a short explanation of what this app does
-st.write("Paste a bug description and a source file path, and the AI will tell you which function most likely needs changing.")
+st.write(
+    "Describe a bug and point at a source file. The app retrieves the "
+    "most relevant functions, asks the AI which one to change, and shows "
+    "evidence so you can verify."
+)
+
+# --- Inputs ---
 
 # Text box for the bug description, pre-filled with a sample bug
 bug_description = st.text_area(
@@ -29,125 +53,244 @@ target_file = st.text_input(
     value="click/src/click/types.py",
 )
 
-# A button that kicks off the analysis
-if st.button("Find the function to change"):
+
+# --- Helper: clean the model's raw output into a function name ---
+
+def clean_prediction(raw):
+    """
+    Strip backticks, quotes, whitespace; take the first line;
+    keep a dotted name like 'Choice.convert' if present.
+    Returns a cleaned string, or the raw text if parsing fails.
+    """
+    # Take only the first line
+    text = raw.strip().splitlines()[0].strip()
+
+    # Remove surrounding backticks and quotes
+    text = text.strip("`\"'")
+
+    # Remove a leading "FUNCTION:" label if the model added one
+    if text.upper().startswith("FUNCTION:"):
+        text = text[len("FUNCTION:"):].strip()
+    text = text.strip("`\"'")
+
+    # Try to extract a dotted or plain Python identifier
+    match = re.search(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)?", text)
+    if match:
+        return match.group(0), True  # (name, parsed_ok)
+
+    # Could not parse — return raw text
+    return text, False
+
+
+# --- Main logic: runs when the button is clicked ---
+
+if st.button("Find the component to change"):
 
     # Make sure neither input is empty
     if not bug_description.strip() or not target_file.strip():
         st.error("Please fill in both the bug description and the file path.")
-    else:
-        # --- Read the source file ---
+        st.stop()
 
-        # Build an OS-friendly path from the user's input
-        file_path = os.path.join(*target_file.replace("\\", "/").split("/"))
+    # Build an OS-friendly path from the user's input
+    file_path = os.path.join(*target_file.replace("\\", "/").split("/"))
 
-        try:
-            # Open and read the target file
-            with open(file_path, "r", encoding="utf-8") as f:
-                code = f.read()
-        except FileNotFoundError:
-            st.error(f"Could not find the file: {file_path}")
-            st.info("Make sure the path is relative to the folder where you launched the app.")
-            # Stop here so the rest of the code doesn't run
-            st.stop()
+    # --- Step 1: Extract and rank functions using retrieval ---
 
-        # Only keep roughly the first 6000 characters so the prompt stays
-        # small and the model responds quickly instead of timing out
-        max_chars = 6000
-        trimmed = False
-        if len(code) > max_chars:
-            code = code[:max_chars]
-            trimmed = True
+    try:
+        with st.spinner("Extracting functions from the file..."):
+            all_funcs = extract_functions(file_path)
+    except FileNotFoundError:
+        st.error(f"Could not find the file: {file_path}")
+        st.info("Make sure the path is relative to the folder where you launched the app.")
+        st.stop()
+    except Exception as e:
+        st.error(f"Error reading the file: {e}")
+        st.stop()
 
-        # --- Build the prompt ---
+    # Rank functions by relevance to the bug using BM25
+    top5 = rank_functions(bug_description, all_funcs, k=5)
 
-        # Tell the model the bug, show the code, and ask for a structured answer
-        prompt = (
-            "I have a bug in my project.\n\n"
-            f"Bug description: {bug_description}\n\n"
-            "Here is the source file that may contain the problem:\n\n"
-            f"{code}\n\n"
-            "Based on the bug description and the code above, tell me which single "
-            "function (or class method) most likely needs to be changed to fix this bug.\n\n"
-            "Reply in EXACTLY this format and nothing else:\n"
-            "FUNCTION: <name of the function or method>\n"
-            "WHY: <1-2 sentences explaining why, referring to actual code>\n"
-            "CONFIDENCE: <high, medium, or low>"
+    # --- Step 2: Hallucination guard (F5) ---
+    # If the best retrieval score is below our threshold, the evidence
+    # is too weak — don't bother asking the model.
+
+    top_score = top5[0]["score"] if top5 else 0.0
+
+    if top_score < SCORE_THRESHOLD:
+        st.warning(
+            "No relevant component found — the evidence is weak. "
+            "Try refining the bug description or pointing at a different file."
         )
+        st.stop()
 
-        # --- Ask the model (with a spinner so the user knows it's working) ---
+    # --- Step 3: Ask the model which candidate to change ---
 
-        try:
-            with st.spinner("Thinking… this may take a moment."):
-                # Send the prompt to the model and wait for a response
-                response = ollama.chat(
-                    model="qwen2.5-coder:7b",
-                    messages=[{"role": "user", "content": prompt}],
-                )
+    # Build a condensed code listing with only the top 5
+    code_listing = ""
+    for i, func in enumerate(top5, start=1):
+        code_listing += f"--- {i}. {func['name']} (line {func['lineno']}) ---\n"
+        code_listing += func["code"] + "\n\n"
 
-                # Pull out the text of the model's reply
-                reply = response["message"]["content"]
+    # Prompt: ask the model to pick one candidate or say NONE
+    prompt = (
+        f"Bug: {bug_description}\n\n"
+        "Here are the 5 most relevant functions/methods from the file:\n\n"
+        f"{code_listing}"
+        "Which one of these most likely needs changing to fix the bug? "
+        "Reply with ONLY the fully-qualified name in the form Class.method "
+        "(or just the function name for a top-level function). "
+        "If none of these candidates plausibly relate to the bug, reply with "
+        "exactly NONE. Nothing else."
+    )
 
-        except Exception as e:
-            st.error("Something went wrong when contacting the model.")
-            st.info("Is Ollama running? Have you pulled the model with:  ollama pull qwen2.5-coder:7b")
-            st.code(str(e))
-            st.stop()
+    try:
+        with st.spinner("Asking the model..."):
+            response = ollama.chat(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            raw_reply = response["message"]["content"]
+    except Exception as e:
+        st.error("Something went wrong when contacting the model.")
+        st.info("Is Ollama running? Have you pulled the model with:  ollama pull qwen2.5-coder:7b")
+        st.code(str(e))
+        st.stop()
 
-        # --- Display the result ---
+    # --- Step 4: Parse the model's reply ---
 
-        # Note if the file was trimmed
-        if trimmed:
-            st.info(f"The file was long, so only the first {max_chars} characters were sent to the model.")
+    prediction, parsed_ok = clean_prediction(raw_reply)
 
-        # Parse the reply to pull out FUNCTION, WHY, and CONFIDENCE lines
-        function_line = ""
-        why_line = ""
-        confidence_line = ""
-        for line in reply.splitlines():
-            if line.upper().startswith("FUNCTION:"):
-                function_line = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("WHY:"):
-                why_line = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("CONFIDENCE:"):
-                confidence_line = line.split(":", 1)[1].strip()
+    # Hallucination guard: if the model said NONE, stop
+    if prediction.upper() == "NONE":
+        st.warning(
+            "No relevant component found — the evidence is weak. "
+            "Try refining the bug description or the file."
+        )
+        st.stop()
 
-        # Show the suggested function prominently
-        st.subheader("Suggested function to change")
-        st.code(function_line if function_line else "(could not parse)")
+    # --- Step 5: Ask for a short "why" explanation ---
 
-        # Show WHY and CONFIDENCE
-        st.markdown(f"**Why:** {why_line if why_line else '(could not parse)'}")
-        st.markdown(f"**Confidence:** {confidence_line if confidence_line else '(could not parse)'}")
+    why_prompt = (
+        f"You chose {prediction} as the function to change for this bug:\n"
+        f"\"{bug_description}\"\n\n"
+        "In 1–2 sentences, explain why this function needs changing, "
+        "referring to actual code in it. Be concise."
+    )
 
-        # Show the raw model reply in case the format was unexpected
-        with st.expander("Raw model reply"):
-            st.text(reply)
+    why_text = ""
+    try:
+        with st.spinner("Getting explanation..."):
+            why_response = ollama.chat(
+                model=MODEL_NAME,
+                messages=[{"role": "user", "content": why_prompt}],
+            )
+            why_text = why_response["message"]["content"].strip()
+    except Exception:
+        why_text = "(Could not retrieve explanation.)"
 
-        # --- Evidence section ---
+    # --- Step 6: Derive confidence from retrieval position (F4) ---
+    # We do NOT ask the model for confidence — we compute it ourselves.
 
-        with st.expander("Evidence — what the AI actually looked at"):
-            # Show the file path that was used
-            st.markdown(f"**File:** `{file_path}`")
+    # Find the rank of the model's pick among the top 5 retrieved candidates
+    pick_rank = None
+    for i, func in enumerate(top5):
+        # Match by component (part before the dot), case-insensitive
+        pick_comp = prediction.split(".")[0].lower()
+        cand_comp = func["name"].split(".")[0].lower()
+        if pick_comp == cand_comp:
+            pick_rank = i + 1  # 1-based rank
+            break
 
-            # Show the first ~40 lines of the file so the user can verify
-            first_lines = "\n".join(code.splitlines()[:40])
-            st.code(first_lines, language="python")
+    # Derive confidence level
+    if not parsed_ok:
+        # Could not parse the model's reply cleanly
+        confidence = "Low"
+        confidence_reason = "model output could not be parsed cleanly"
+    elif top_score < SCORE_THRESHOLD * 1.5:
+        # The top retrieval score is near the threshold — shaky evidence
+        confidence = "Low"
+        confidence_reason = f"top retrieval score ({top_score:.2f}) is near the threshold"
+    elif pick_rank == 1:
+        # The model picked the #1 retrieved candidate
+        confidence = "High"
+        confidence_reason = "model's pick is the #1 retrieved candidate"
+    elif pick_rank is not None:
+        # The model picked something in the top 5 but not #1
+        confidence = "Medium"
+        confidence_reason = f"model's pick is #{pick_rank} in retrieved candidates"
+    else:
+        # The model picked something not in the top 5
+        confidence = "Low"
+        confidence_reason = "model's pick was not found in the top-5 retrieved candidates"
 
-        # --- Accept / Reject buttons ---
+    # --- Save results in session_state so they persist after button clicks (F6) ---
 
-        st.write("---")
-        st.write("Do you agree with the model's suggestion?")
+    st.session_state["result"] = {
+        "prediction": prediction,
+        "parsed_ok": parsed_ok,
+        "raw_reply": raw_reply,
+        "why": why_text,
+        "confidence": confidence,
+        "confidence_reason": confidence_reason,
+        "top5": top5,
+        "top_score": top_score,
+    }
+    # Clear any previous accept/reject status
+    st.session_state.pop("review", None)
 
-        # Two columns so the buttons sit side by side
-        col1, col2 = st.columns(2)
 
-        with col1:
-            # Accept button
-            if st.button("✅ Accept"):
-                st.success("Marked as accepted.")
+# --- Display results (persisted in session_state) ---
 
-        with col2:
-            # Reject button
-            if st.button("❌ Reject"):
-                st.warning("Marked as rejected.")
+if "result" in st.session_state:
+    r = st.session_state["result"]
+
+    st.write("---")
+
+    # Show the suggested component prominently
+    st.subheader("Suggested component to change")
+    st.code(r["prediction"])
+
+    # Show the explanation
+    st.markdown(f"**Why:** {r['why']}")
+
+    # Show the derived confidence with its reason
+    st.markdown(f"**Confidence:** {r['confidence']}  _{r['confidence_reason']}_")
+
+    # If parsing failed, also show the raw reply
+    if not r["parsed_ok"]:
+        st.warning("Could not parse the model's reply cleanly. Raw output shown below:")
+        st.code(r["raw_reply"])
+
+    # --- Evidence expander: show provenance / score breakdown ---
+
+    with st.expander("Evidence — top-5 retrieved candidates"):
+        for i, func in enumerate(r["top5"], start=1):
+            st.markdown(
+                f"**{i}. {func['name']}** — line {func['lineno']}, "
+                f"BM25 score: {func['score']:.4f}"
+            )
+            # Show first 15 lines of the function's code as a preview
+            preview = "\n".join(func["code"].splitlines()[:15])
+            st.code(preview, language="python")
+
+    # --- Human review with persistence (F6) ---
+
+    st.write("---")
+    st.write("Do you agree with this suggestion?")
+
+    # Two columns so the buttons sit side by side
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("✅ Accept"):
+            st.session_state["review"] = "accepted"
+
+    with col2:
+        if st.button("❌ Reject"):
+            st.session_state["review"] = "rejected"
+
+    # Show the review status if set
+    if st.session_state.get("review") == "accepted":
+        st.success("Marked as accepted.")
+    elif st.session_state.get("review") == "rejected":
+        st.warning("Marked as rejected.")

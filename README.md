@@ -1,22 +1,54 @@
 # RepoReason
 
-A small Human–AI tool that helps localize bugs to specific functions in a codebase.
+A Human–AI tool that localizes a bug to the right code component in a repository, using retrieval + a local LLM, with evidence and human review.
 
 ## What it does
 
-You describe a bug in plain English and point at a source file. A local AI model reads the code, suggests which single function most likely needs changing, explains why (referencing the actual code), and gives a confidence level. The app also shows you the evidence — the exact code the model looked at — so you can judge for yourself. You then accept or reject the suggestion.
+A user describes a bug in plain English and points at a source file. The app extracts every function, method, and class from that file using Python's `ast` module, then ranks them by relevance to the bug using BM25 keyword retrieval. Only the top candidates — not the whole file — are sent to a local LLM (`qwen2.5-coder:7b` via Ollama), which names the single component most likely to need changing, explains why with reference to actual code, and receives an evidence-based confidence score derived from its retrieval rank. The user sees the suggestion, the explanation, and the full evidence (retrieved candidates with BM25 scores), then accepts or rejects it. If none of the retrieved candidates plausibly relate to the bug, the app says **"No relevant component found"** instead of guessing.
 
-## What AI capability it demonstrates
+## Human–AI workflow
 
-**Fault localization**: given a bug description and real source code, the model identifies *which function should change and why*, grounded in code it actually read. This is a first step toward AI-assisted debugging that a developer can verify and trust.
+```
+Human input (bug + file)
+    → Retrieval (BM25 ranking of extracted functions)
+        → LLM (selects component + explains why)
+            → Result + evidence / provenance
+                → Human review (accept / reject)
+```
 
-## Requirements
+## Data
 
-- Python 3.12
-- [Ollama](https://ollama.com/) with the `qwen2.5-coder:7b` model pulled
-- Python packages listed in `requirements.txt`
+The case-study repository is [Click](https://github.com/pallets/click) — a well-known, senior-written Python library. The app reads Click's real source files as the code the AI reasons about.
 
-## Setup
+## AI capability
+
+**Retrieval-augmented fault localization**: given a bug description and a source file, identify *which function or method should change and why*, grounded in code the model actually read, with retrieval narrowing the search space before the LLM decides.
+
+## Baseline and evaluation
+
+We compared two conditions on 8 labeled bugs from the Click repository:
+
+| Condition | Component accuracy | Exact accuracy |
+|---|---|---|
+| **A — LLM only** (first 6000 chars of the whole file) | 0/8 (0%) | 0/8 (0%) |
+| **B — LLM + retrieval** (top-5 BM25 candidates only) | 6/8 (75%) | 5/8 (62.5%) |
+
+Retrieval metrics (Condition B):
+
+| Metric | Value |
+|---|---|
+| Recall@5 | 8/8 (100%) |
+| MRR | 0.83 |
+
+The retrieval step finds the right component in the top 5 every time; most of the remaining error is in the LLM's final selection among good candidates.
+
+Run the evaluation yourself:
+
+```bash
+python eval/run_eval.py
+```
+
+## How to run
 
 1. Create and activate a virtual environment:
    ```bash
@@ -32,7 +64,7 @@ You describe a bug in plain English and point at a source file. A local AI model
    pip install -r requirements.txt
    ```
 
-3. Clone the Click repository into the project folder (this is the codebase the AI reads):
+3. Clone the Click repository into the project folder:
    ```bash
    git clone https://github.com/pallets/click.git
    ```
@@ -42,31 +74,33 @@ You describe a bug in plain English and point at a source file. A local AI model
    ollama pull qwen2.5-coder:7b
    ```
 
-## How to run
+5. Launch the app:
+   ```bash
+   streamlit run app.py
+   ```
 
-```bash
-streamlit run app.py
-```
-
-Then open the URL shown in your terminal (usually `http://localhost:8501`) and use the web page.
-
-## What data it uses
-
-The [Click](https://github.com/pallets/click) repository's source files — real, senior-written Python code — serve as the codebase the AI reads and reasons about.
+Then open the URL shown in your terminal (usually `http://localhost:8501`).
 
 ## Project files
 
-- **`app.py`** — Streamlit web app. Lets you enter a bug description and file path, runs the AI, shows the result with evidence, and lets you accept or reject the suggestion.
-- **`localize.py`** — Command-line script that reads a source file and asks the model which function to change, returning FUNCTION / WHY / CONFIDENCE.
-- **`read_code.py`** — Command-line script that reads a source file and asks the model to summarize what the file does.
-- **`ask_model.py`** — Minimal script that sends a simple prompt to the model to verify it's working.
-- **`requirements.txt`** — Python dependencies (`ollama`, `streamlit`).
+- **`app.py`** — Streamlit web app. Takes a bug description and file path, runs retrieval + LLM localization, shows the result with evidence and confidence, and lets the user accept or reject.
+- **`retrieval.py`** — Function extraction (via `ast`) and BM25 ranking (via `rank_bm25`). Provides `extract_functions()` and `rank_functions()`.
+- **`eval/cases.json`** — 8 labeled bug cases with gold-standard function names.
+- **`eval/run_eval.py`** — Evaluation script that runs both conditions (LLM-only vs LLM+retrieval) and reports accuracy, Recall@5, and MRR.
+- **`eval/results.json`** — Saved evaluation results (generated by `run_eval.py`).
+- **`localize.py`** — Earlier command-line localization script (sends the whole file to the model).
+- **`requirements.txt`** — Python dependencies (`ollama`, `streamlit`, `rank_bm25`).
 
-## What remains to be developed
+## Limitations
 
-This is a first vertical slice. Honest next steps include:
+- **Local Ollama required.** The app needs a locally running Ollama instance, so it can't deploy to free cloud hosting. It is a reproducible local demo instead.
+- **Small experiment.** n = 8 is a small benchmark. The results are directionally clear but not statistically powerful.
+- **Truncation hurts the baseline.** The LLM-only condition sends only the first 6000 characters of the file, which may cut off the relevant function entirely. This is a real constraint of sending whole files to a small local model, but it does disadvantage the baseline.
+- **Exact match understates results.** Some model predictions name a valid alternative (e.g., a parent class method) that is marked wrong because it doesn't match the single gold label.
+- **LLM selection is the bottleneck.** Retrieval finds the right component every time (Recall@5 = 100%); the remaining errors come from the LLM choosing the wrong candidate from a good shortlist.
 
-- **Code graphs** — build structural understanding of the code so the model can pin down the exact class (e.g., distinguishing which `convert` method among several classes).
-- **Multi-file retrieval** — search across multiple files in the repository, not just one file at a time.
-- **Automatic test running** — run the project's tests to confirm whether a suggested fix actually resolves the bug.
-- **Memory** — save accepted/rejected suggestions so the system can learn from past sessions.
+## Next steps
+
+- Add a **reranking step** over retrieved candidates to improve the LLM's final selection.
+- **Grow the benchmark** with more bugs across more files and repositories.
+- Extend toward **repository-level search and ranking** — retrieving across an entire project, not just one file — which is the planned research direction.

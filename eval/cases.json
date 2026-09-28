@@ -1,0 +1,50 @@
+[
+    {
+        "id": 1,
+        "bug": "Choice options are not matching values case-insensitively when case_sensitive=False.",
+        "file": "click/src/click/types.py",
+        "gold_function": "Choice.convert"
+    },
+    {
+        "id": 2,
+        "bug": "A required Path that does not exist is not being reported as an error.",
+        "file": "click/src/click/types.py",
+        "gold_function": "Path.convert"
+    },
+    {
+        "id": 3,
+        "bug": "Opening a file that cannot be read does not raise a clear error.",
+        "file": "click/src/click/types.py",
+        "gold_function": "File.convert"
+    },
+    {
+        "id": 4,
+        "bug": "An integer value outside the allowed min/max range is not rejected.",
+        "file": "click/src/click/types.py",
+        "gold_function": "_NumberRangeBase.convert"
+    },
+    {
+        "id": 5,
+        "bug": "A datetime string is not parsed using the provided formats.",
+        "file": "click/src/click/types.py",
+        "gold_function": "DateTime.convert"
+    },
+    {
+        "id": 6,
+        "bug": "Boolean flag values like 'yes'/'no' are not converted correctly.",
+        "file": "click/src/click/types.py",
+        "gold_function": "BoolParamType.convert"
+    },
+    {
+        "id": 7,
+        "bug": "Long help lines are wrapped incorrectly in a narrow terminal.",
+        "file": "click/src/click/formatting.py",
+        "gold_function": "wrap_text"
+    },
+    {
+        "id": 8,
+        "bug": "A malformed UUID string is not rejected as invalid.",
+        "file": "click/src/click/types.py",
+        "gold_function": "UUIDParameterType.convert"
+    }
+]

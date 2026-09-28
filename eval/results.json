@@ -1,0 +1,108 @@
+{
+  "cases": [
+    {
+      "id": 1,
+      "gold": "Choice.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "Choice.normalize_choice",
+      "B_component_correct": true,
+      "B_exact": false,
+      "gold_in_top5": true,
+      "rank": 1
+    },
+    {
+      "id": 2,
+      "gold": "Path.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "Path.convert",
+      "B_component_correct": true,
+      "B_exact": true,
+      "gold_in_top5": true,
+      "rank": 1
+    },
+    {
+      "id": 3,
+      "gold": "File.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "File.convert",
+      "B_component_correct": true,
+      "B_exact": true,
+      "gold_in_top5": true,
+      "rank": 1
+    },
+    {
+      "id": 4,
+      "gold": "_NumberRangeBase.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "IntRange._clamp",
+      "B_component_correct": false,
+      "B_exact": false,
+      "gold_in_top5": true,
+      "rank": 3
+    },
+    {
+      "id": 5,
+      "gold": "DateTime.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "DateTime.convert",
+      "B_component_correct": true,
+      "B_exact": true,
+      "gold_in_top5": true,
+      "rank": 1
+    },
+    {
+      "id": 6,
+      "gold": "BoolParamType.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "BoolParamType.str_to_bool",
+      "B_component_correct": true,
+      "B_exact": false,
+      "gold_in_top5": true,
+      "rank": 1
+    },
+    {
+      "id": 7,
+      "gold": "wrap_text",
+      "A_prediction": "HelpFormatter.write_usage",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "HelpFormatter.write_dl",
+      "B_component_correct": false,
+      "B_exact": false,
+      "gold_in_top5": true,
+      "rank": 3
+    },
+    {
+      "id": 8,
+      "gold": "UUIDParameterType.convert",
+      "A_prediction": "ParamType.convert",
+      "A_component_correct": false,
+      "A_exact": false,
+      "B_prediction": "UUIDParameterType.convert",
+      "B_component_correct": true,
+      "B_exact": true,
+      "gold_in_top5": true,
+      "rank": 1
+    }
+  ],
+  "summary": {
+    "A_component_accuracy": "0.0%",
+    "B_component_accuracy": "75.0%",
+    "A_exact_accuracy": "0.0%",
+    "B_exact_accuracy": "50.0%",
+    "retrieval_recall_at_5": "100.0%",
+    "retrieval_MRR": "0.8333"
+  }
+}
