@@ -2,3 +2,4 @@
 click/
 __pycache__/
 *.pyc
+.env

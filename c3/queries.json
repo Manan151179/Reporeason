@@ -1,0 +1,26 @@
+[
+    {
+        "id": "q1",
+        "query": "retrieval augmented generation RAG chatbot application"
+    },
+    {
+        "id": "q2",
+        "query": "job matching recommendation system machine learning"
+    },
+    {
+        "id": "q3",
+        "query": "real-time navigation routing app with maps"
+    },
+    {
+        "id": "q4",
+        "query": "healthcare patient dashboard analytics"
+    },
+    {
+        "id": "q5",
+        "query": "sentiment analysis social media NLP"
+    },
+    {
+        "id": "q6",
+        "query": "image classification deep learning web app"
+    }
+]

@@ -1,0 +1,76 @@
+{
+  "configurations": [
+    {
+      "config": "Semantic only",
+      "weights": {
+        "semantic": 1.0,
+        "popularity": 0.0,
+        "recency": 0.0,
+        "documentation": 0.0,
+        "license": 0.0
+      },
+      "avg_nDCG@10": 0.7426007869403574,
+      "avg_P@5(strict)": 0.16666666666666666
+    },
+    {
+      "config": "Full hybrid",
+      "weights": {
+        "semantic": 0.55,
+        "popularity": 0.15,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7823346555066873,
+      "avg_P@5(strict)": 0.3
+    },
+    {
+      "config": "No popularity",
+      "weights": {
+        "semantic": 0.55,
+        "popularity": 0.0,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7775398144942841,
+      "avg_P@5(strict)": 0.26666666666666666
+    },
+    {
+      "config": "No recency",
+      "weights": {
+        "semantic": 0.55,
+        "popularity": 0.15,
+        "recency": 0.0,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7873216217504342,
+      "avg_P@5(strict)": 0.26666666666666666
+    },
+    {
+      "config": "No documentation",
+      "weights": {
+        "semantic": 0.55,
+        "popularity": 0.15,
+        "recency": 0.15,
+        "documentation": 0.0,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7776105089752038,
+      "avg_P@5(strict)": 0.3333333333333333
+    },
+    {
+      "config": "No license",
+      "weights": {
+        "semantic": 0.55,
+        "popularity": 0.15,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.0
+      },
+      "avg_nDCG@10": 0.7828452943954692,
+      "avg_P@5(strict)": 0.3
+    }
+  ]
+}

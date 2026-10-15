@@ -1,3 +1,6 @@
 ollama
 streamlit
 rank-bm25
+requests
+python-dotenv
+neo4j
