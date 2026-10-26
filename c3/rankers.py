@@ -66,7 +66,7 @@ def _min_max_normalize(values):
     lo = min(values)
     hi = max(values)
     if hi == lo:
-        return [0.0] * len(values)
+        return [0.5] * len(values)
     return [(v - lo) / (hi - lo) for v in values]
 
 
@@ -165,8 +165,8 @@ def rank_hybrid(query, repos, weights=None):
     # Use custom weights if provided, otherwise fall back to defaults
     if weights is None:
         weights = {
-            "semantic":      0.55,
-            "popularity":    0.15,
+            "semantic":      0.45,
+            "popularity":    0.25,
             "recency":       0.15,
             "documentation": 0.10,
             "license":       0.05,
@@ -183,7 +183,7 @@ def rank_hybrid(query, repos, weights=None):
         raw_semantic.append(cosine_similarity(query_vec, doc_vec))
 
     # --- Signal 2: Popularity = log(stars + 1) ---
-    raw_popularity = [math.log(repo.get("stars", 0) + 1) for repo in repos]
+    raw_popularity = [math.log1p(repo.get("stars", 0)) for repo in repos]
 
     # --- Signal 3: Recency = pushed_at timestamp (newer = higher) ---
     raw_recency = [_parse_timestamp(repo.get("pushed_at")) for repo in repos]
@@ -268,8 +268,8 @@ def rank_detailed(query, repos, weights=None):
     # Use custom weights if provided, otherwise fall back to defaults
     if weights is None:
         weights = {
-            "semantic":      0.55,
-            "popularity":    0.15,
+            "semantic":      0.45,
+            "popularity":    0.25,
             "recency":       0.15,
             "documentation": 0.10,
             "license":       0.05,
@@ -286,7 +286,7 @@ def rank_detailed(query, repos, weights=None):
         doc_vec = _get_embedding(doc_text)
         raw_semantic.append(cosine_similarity(query_vec, doc_vec))
 
-    raw_popularity = [math.log(repo.get("stars", 0) + 1) for repo in repos]
+    raw_popularity = [math.log1p(repo.get("stars", 0)) for repo in repos]
 
     raw_recency = [_parse_timestamp(repo.get("pushed_at")) for repo in repos]
 
