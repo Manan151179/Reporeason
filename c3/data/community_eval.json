@@ -1,0 +1,136 @@
+{
+  "num_queries": 6,
+  "averages": {
+    "RAG": {
+      "nDCG@10": 0.7426,
+      "P@5": 0.9,
+      "div@5": 1.5
+    },
+    "GraphRAG": {
+      "nDCG@10": 0.7816,
+      "P@5": 0.9333,
+      "div@5": 1.6667
+    },
+    "Community": {
+      "nDCG@10": 0.7834,
+      "P@5": 0.9333,
+      "div@5": 2.3333
+    }
+  },
+  "per_query": [
+    {
+      "query_id": "q1",
+      "query": "retrieval augmented generation RAG chatbot application",
+      "RAG": {
+        "nDCG@10": 0.843,
+        "P@5": 1.0,
+        "div@5": 2
+      },
+      "GraphRAG": {
+        "nDCG@10": 0.9661,
+        "P@5": 1.0,
+        "div@5": 2
+      },
+      "Community": {
+        "nDCG@10": 0.9476,
+        "P@5": 1.0,
+        "div@5": 2
+      }
+    },
+    {
+      "query_id": "q2",
+      "query": "job matching recommendation system machine learning",
+      "RAG": {
+        "nDCG@10": 0.689,
+        "P@5": 1.0,
+        "div@5": 1
+      },
+      "GraphRAG": {
+        "nDCG@10": 0.7341,
+        "P@5": 1.0,
+        "div@5": 2
+      },
+      "Community": {
+        "nDCG@10": 0.7307,
+        "P@5": 1.0,
+        "div@5": 3
+      }
+    },
+    {
+      "query_id": "q3",
+      "query": "real-time navigation routing app with maps",
+      "RAG": {
+        "nDCG@10": 0.6946,
+        "P@5": 0.8,
+        "div@5": 1
+      },
+      "GraphRAG": {
+        "nDCG@10": 0.8971,
+        "P@5": 1.0,
+        "div@5": 2
+      },
+      "Community": {
+        "nDCG@10": 0.8971,
+        "P@5": 1.0,
+        "div@5": 2
+      }
+    },
+    {
+      "query_id": "q4",
+      "query": "healthcare patient dashboard analytics",
+      "RAG": {
+        "nDCG@10": 0.706,
+        "P@5": 0.8,
+        "div@5": 2
+      },
+      "GraphRAG": {
+        "nDCG@10": 0.7086,
+        "P@5": 0.8,
+        "div@5": 1
+      },
+      "Community": {
+        "nDCG@10": 0.7184,
+        "P@5": 0.8,
+        "div@5": 3
+      }
+    },
+    {
+      "query_id": "q5",
+      "query": "sentiment analysis social media NLP",
+      "RAG": {
+        "nDCG@10": 0.7428,
+        "P@5": 0.8,
+        "div@5": 1
+      },
+      "GraphRAG": {
+        "nDCG@10": 0.674,
+        "P@5": 0.8,
+        "div@5": 1
+      },
+      "Community": {
+        "nDCG@10": 0.6786,
+        "P@5": 0.8,
+        "div@5": 2
+      }
+    },
+    {
+      "query_id": "q6",
+      "query": "image classification deep learning web app",
+      "RAG": {
+        "nDCG@10": 0.7802,
+        "P@5": 1.0,
+        "div@5": 2
+      },
+      "GraphRAG": {
+        "nDCG@10": 0.7098,
+        "P@5": 1.0,
+        "div@5": 2
+      },
+      "Community": {
+        "nDCG@10": 0.7283,
+        "P@5": 1.0,
+        "div@5": 2
+      }
+    }
+  ]
+}

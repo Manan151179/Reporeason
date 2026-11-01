@@ -71,6 +71,54 @@
       },
       "avg_nDCG@10": 0.7828452943954692,
       "avg_P@5(strict)": 0.3
+    },
+    {
+      "config": "pop=0.10",
+      "weights": {
+        "semantic": 0.6,
+        "popularity": 0.1,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7762345621946279,
+      "avg_P@5(strict)": 0.26666666666666666
+    },
+    {
+      "config": "pop=0.20",
+      "weights": {
+        "semantic": 0.5,
+        "popularity": 0.2,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7691926447694909,
+      "avg_P@5(strict)": 0.3
+    },
+    {
+      "config": "pop=0.25",
+      "weights": {
+        "semantic": 0.45,
+        "popularity": 0.25,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.7816156779466968,
+      "avg_P@5(strict)": 0.3333333333333334
+    },
+    {
+      "config": "pop=0.30",
+      "weights": {
+        "semantic": 0.4,
+        "popularity": 0.3,
+        "recency": 0.15,
+        "documentation": 0.1,
+        "license": 0.05
+      },
+      "avg_nDCG@10": 0.761172522153954,
+      "avg_P@5(strict)": 0.3333333333333334
     }
   ]
 }

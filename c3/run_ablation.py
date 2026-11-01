@@ -77,6 +77,23 @@ def main():
         ("No recency",    {**full, "recency": 0.0}),
         ("No documentation", {**full, "documentation": 0.0}),
         ("No license",    {**full, "license": 0.0}),
+        # --- Popularity weight sweep (difference taken from semantic) ---
+        ("pop=0.10", {
+            "semantic": 0.60, "popularity": 0.10, "recency": 0.15,
+            "documentation": 0.10, "license": 0.05,
+        }),
+        ("pop=0.20", {
+            "semantic": 0.50, "popularity": 0.20, "recency": 0.15,
+            "documentation": 0.10, "license": 0.05,
+        }),
+        ("pop=0.25", {
+            "semantic": 0.45, "popularity": 0.25, "recency": 0.15,
+            "documentation": 0.10, "license": 0.05,
+        }),
+        ("pop=0.30", {
+            "semantic": 0.40, "popularity": 0.30, "recency": 0.15,
+            "documentation": 0.10, "license": 0.05,
+        }),
     ]
 
     # --- Run each configuration across all queries ---

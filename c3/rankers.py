@@ -153,7 +153,7 @@ def rank_dense(query, repos):
 # Ranker D — Hybrid (weighted combination of multiple signals)
 # =====================================================================
 
-def rank_hybrid(query, repos, weights=None):
+def rank_hybrid(query, repos, weights=None, doc_embeddings=None):
     """
     Rank repos by a weighted combination of five signals, each
     min-max normalized to 0..1 within this query's candidate set.
@@ -177,9 +177,12 @@ def rank_hybrid(query, repos, weights=None):
     # --- Signal 1: Semantic similarity (same as rank_dense) ---
     query_vec = _get_embedding("search_query: " + query)
     raw_semantic = []
-    for repo in repos:
-        doc_text = "search_document: " + repo_text(repo)
-        doc_vec = _get_embedding(doc_text)
+    for i, repo in enumerate(repos):
+        if doc_embeddings is not None:
+            doc_vec = doc_embeddings[i]
+        else:
+            doc_text = "search_document: " + repo_text(repo)
+            doc_vec = _get_embedding(doc_text)
         raw_semantic.append(cosine_similarity(query_vec, doc_vec))
 
     # --- Signal 2: Popularity = log(stars + 1) ---
@@ -247,7 +250,7 @@ def rank_hybrid(query, repos, weights=None):
 # Ranker D+ — Detailed hybrid (same logic, richer output)
 # =====================================================================
 
-def rank_detailed(query, repos, weights=None):
+def rank_detailed(query, repos, weights=None, doc_embeddings=None):
     """
     Rank repos using the EXACT same hybrid method as rank_hybrid
     (same five signals, same min-max normalization, same default weights,
@@ -281,9 +284,12 @@ def rank_detailed(query, repos, weights=None):
 
     query_vec = _get_embedding("search_query: " + query)
     raw_semantic = []
-    for repo in repos:
-        doc_text = "search_document: " + repo_text(repo)
-        doc_vec = _get_embedding(doc_text)
+    for i, repo in enumerate(repos):
+        if doc_embeddings is not None:
+            doc_vec = doc_embeddings[i]
+        else:
+            doc_text = "search_document: " + repo_text(repo)
+            doc_vec = _get_embedding(doc_text)
         raw_semantic.append(cosine_similarity(query_vec, doc_vec))
 
     raw_popularity = [math.log1p(repo.get("stars", 0)) for repo in repos]

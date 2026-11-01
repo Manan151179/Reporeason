@@ -2,4 +2,5 @@
 click/
 __pycache__/
 *.pyc
+.envgraphsearch/feedback_log.jsonl
 .env
