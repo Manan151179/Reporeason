@@ -17,8 +17,9 @@ human-in-the-loop feedback step (relevant / not / wrong-community) refines resul
 > `eval/`) — is kept at the repository root for
 > history. If you are reproducing the poster, use the commands below, **not**
 > `streamlit run app.py`.
-
 ---
+## Link to the demo app
+https://youtu.be/1YhbXrRfyNo
 
 ## Poster & demo
 
