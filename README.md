@@ -14,9 +14,16 @@ human-in-the-loop feedback step (relevant / not / wrong-community) refines resul
 > system described here and on the poster** is the repo-search system in
 > [`graphsearch/`](graphsearch/) and [`c3/`](c3/). An **earlier milestone** — a
 > bug-localization tool over the Click library (`app.py`, `retrieval.py`, `localize.py`,
-> `eval/`, and the vendored `click/` source) — is kept at the repository root for
+> `eval/`) — is kept at the repository root for
 > history. If you are reproducing the poster, use the commands below, **not**
 > `streamlit run app.py`.
+
+---
+
+## Poster & demo
+
+- **Poster (PDF):** [`docs/RepoReason_Poster_48x36.pdf`](docs/RepoReason_Poster_48x36.pdf)
+- **Demo video (3 min):** [Watch on YouTube](https://youtu.be/1YhbXrRfyNo)
 
 ---
 
@@ -49,7 +56,10 @@ Project idea (plain English)
 | `c3/data/to_label.csv` | Human relevance labels (0 / 1 / 2) for every candidate. |
 | `c3/LABELING_CRITERIA.md` | The rubric used to assign the 0 / 1 / 2 labels. |
 | `reproduce.py` | One command to regenerate every poster number **offline** from saved results. |
-| `app.py`, `retrieval.py`, `localize.py`, `eval/`, `click/` | Earlier bug-localization milestone (see scope note). |
+| `docs/` | Architecture guide (`ARCHITECTURE.md`), labeling criteria, poster PDF. |
+| `examples/` | Worked end-to-end example with placeholder for a real run. |
+| `results/` | Eval outputs (`all_results.json`, `community_eval.json`), 95% CI tables (`stats_summary.csv`, `per_query_metrics.csv`), and figures. |
+| `app.py`, `retrieval.py`, `localize.py`, `eval/`| Earlier bug-localization milestone (see scope note). |
 
 ## Prerequisites
 

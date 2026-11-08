@@ -1,0 +1,43 @@
+group,system,query_id,nDCG@10,P@5,MRR,div@5,community_ceiling
+ranker,Native,q1,0.860036,1.0,1.0,,2
+ranker,Native,q2,0.848898,1.0,1.0,,3
+ranker,Native,q3,0.603199,0.6,0.5,,3
+ranker,Native,q4,0.723958,0.8,1.0,,3
+ranker,Native,q5,0.625762,0.6,1.0,,2
+ranker,Native,q6,0.683872,1.0,1.0,,3
+ranker,BM25,q1,0.776373,1.0,1.0,,2
+ranker,BM25,q2,0.739143,0.8,1.0,,3
+ranker,BM25,q3,0.717516,0.8,1.0,,3
+ranker,BM25,q4,0.650162,0.8,0.5,,3
+ranker,BM25,q5,0.735268,1.0,1.0,,2
+ranker,BM25,q6,0.811142,1.0,1.0,,3
+ranker,Dense,q1,0.843029,1.0,1.0,,2
+ranker,Dense,q2,0.689002,1.0,1.0,,3
+ranker,Dense,q3,0.694567,0.8,1.0,,3
+ranker,Dense,q4,0.706002,0.8,1.0,,3
+ranker,Dense,q5,0.742789,0.8,1.0,,2
+ranker,Dense,q6,0.780215,1.0,1.0,,3
+ranker,Hybrid,q1,0.966062,1.0,1.0,,2
+ranker,Hybrid,q2,0.734104,1.0,1.0,,3
+ranker,Hybrid,q3,0.897064,1.0,1.0,,3
+ranker,Hybrid,q4,0.708643,0.8,1.0,,3
+ranker,Hybrid,q5,0.673977,0.8,1.0,,2
+ranker,Hybrid,q6,0.709844,1.0,1.0,,3
+ablation,Traditional RAG,q1,0.843,1.0,,2.0,2
+ablation,Traditional RAG,q2,0.689,1.0,,1.0,3
+ablation,Traditional RAG,q3,0.6946,0.8,,1.0,3
+ablation,Traditional RAG,q4,0.706,0.8,,2.0,3
+ablation,Traditional RAG,q5,0.7428,0.8,,1.0,2
+ablation,Traditional RAG,q6,0.7802,1.0,,2.0,3
+ablation,GraphRAG,q1,0.9661,1.0,,2.0,2
+ablation,GraphRAG,q2,0.7341,1.0,,2.0,3
+ablation,GraphRAG,q3,0.8971,1.0,,2.0,3
+ablation,GraphRAG,q4,0.7086,0.8,,1.0,3
+ablation,GraphRAG,q5,0.674,0.8,,1.0,2
+ablation,GraphRAG,q6,0.7098,1.0,,2.0,3
+ablation,Community-aware,q1,0.9476,1.0,,2.0,2
+ablation,Community-aware,q2,0.7307,1.0,,3.0,3
+ablation,Community-aware,q3,0.8971,1.0,,2.0,3
+ablation,Community-aware,q4,0.7184,0.8,,3.0,3
+ablation,Community-aware,q5,0.6786,0.8,,2.0,2
+ablation,Community-aware,q6,0.7283,1.0,,2.0,3
